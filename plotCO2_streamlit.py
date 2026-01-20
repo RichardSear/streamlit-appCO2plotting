@@ -145,4 +145,5 @@ if uploaded_file is not None:
     
 
     st.write('Richard Sear, Jan 2026')
-    st.markdown("[Streamlit (Python) code from GitHub](https://github.com/RichardSear/Stokes-Einstein-D-calc)")
+    st.markdown("[Streamlit (Python) code from GitHub](https://github.com/RichardSear/streamlit-appCO2plotting)")
+
