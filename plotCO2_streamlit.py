@@ -89,10 +89,22 @@ if uploaded_file is not None:
         end_time = dt.datetime(2026, 1, 16, end_hour)
 
         t_h,CO2s,t_fit,t_fit_dt=pandas_to_xy_for_fitting(start_time,end_time)
-
+        # ---------------------------------------------------------
+        # Fit of straight line
+        # ---------------------------------------------------------
+        result = linregress(t_h, CO2s)
+        #st.write(result)
+        inter=result.intercept
+        slope_h=result.slope
+        #
+        err_est_slope=result.stderr
+        st.write('1st fit of straight line to data over specified range')
+        st.write('slope ',round(slope_h,1),' ppm CO2 per h +/-',round(err_est_slope,1))
+        CO2_fit2 = inter+slope_h*t_fit
     # ---------------------------------------------------------
     # 5. Fit of exponential
     # ---------------------------------------------------------
+        st.write('2nd fit exponential function to data over specified range')
         popt, pcov = curve_fit(exp_model, t_h, CO2s, p0=(100.0, 2.0,400))
 #
         relax_time_h=popt[1]
@@ -106,17 +118,6 @@ if uploaded_file is not None:
         err_est_delta=np.sqrt(pcov[2,2])
         st.write('Delta CO2 ',round(delta_CO2),' ppm +/-',round(err_est_delta))
         CO2_fit1 = exp_model(t_fit, delta_CO2, relax_time_h, steady_state_CO2)
-        # ---------------------------------------------------------
-        # Fit of straight line
-        # ---------------------------------------------------------
-        result = linregress(t_h, CO2s)
-        st.write(result)
-        inter=result.intercept
-        slope_h=result.slope
-        #
-        err_est_slope=result.stderr
-        st.write('slope ',round(slope_h,1),' ppm CO2 per h +/-',round(err_est_slope,1))
-        CO2_fit2 = inter+slope_h*t_fit
 #
         # Plot
         fig, ax = plt.subplots(figsize=(5,3))
@@ -146,4 +147,3 @@ if uploaded_file is not None:
 
     st.write('Richard Sear, Jan 2026')
     st.markdown("[Streamlit (Python) code from GitHub](https://github.com/RichardSear/streamlit-appCO2plotting)")
-
