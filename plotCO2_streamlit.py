@@ -4,6 +4,10 @@ from matplotlib import pyplot as plt
 from scipy.stats import linregress
 import csv
 from datetime import datetime
+from matplotlib.ticker import FuncFormatter
+
+def colon_fmt(x, pos):
+    return f"{int(x)}:{int((x % 1) * 100):02d}"
 
 uploaded = st.file_uploader("Upload a CSV", type="csv")
 
@@ -51,9 +55,9 @@ if uploaded:
     ax.scatter(t_s/3600.0, CO2s,color="black")#, s=30)
     ax.set_xlabel('time /hour')
     ax.set_ylabel('CO2   /ppm')
-    #ax.set_title(f"{CO2_col_label} vs {time_col_label}")
-#    plt.ylim([0,2000])
-#    ax.grid(True, alpha=0.3)
+    ax.xaxis.set_major_formatter(FuncFormatter(colon_fmt))
+    plt.xticks(rotation=45)
+    ax.grid(True, alpha=0.3)
     st.pyplot(fig)
     '''
     fit
@@ -111,7 +115,7 @@ if uploaded:
         ax.set_ylabel('CO2 /ppm')
 #        ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))  # e.g., 01:00, 14:30
         #ax.set_title(f"{CO2_col_label} vs {time_col_label}")
-
+        ax.xaxis.set_major_formatter(FuncFormatter(colon_fmt))
         plt.xticks(rotation=45)
         # now plot fit
         ax.plot(t_fit_s/3600.0, CO2_fit_line, 
