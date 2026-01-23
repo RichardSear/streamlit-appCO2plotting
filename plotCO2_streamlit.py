@@ -9,6 +9,11 @@ from matplotlib.ticker import FuncFormatter
 def colon_fmt(x, pos):
     return f"{int(x)}:{int((x % 1) * 100):02d}"
 
+
+# Initialize state
+if "mode" not in st.session_state:
+    st.session_state.mode = "fitting"   # default option
+
 uploaded = st.file_uploader("Upload a CSV", type="csv")
 
 if uploaded:
@@ -48,7 +53,7 @@ if uploaded:
     plot day's data
     '''
     # Plot
-    fig, ax = plt.subplots(figsize=(5,3))
+    fig, ax = plt.subplots(figsize=(5,2))
 #    plt.xlim(pd.Timestamp(start_time),
 #         pd.Timestamp(end_time))
     st.write('read in ',len(t_s),' data points')
@@ -56,74 +61,104 @@ if uploaded:
     ax.set_xlabel('time /hour')
     ax.set_ylabel('CO2   /ppm')
     ax.xaxis.set_major_formatter(FuncFormatter(colon_fmt))
-    plt.xticks(rotation=45)
+    #plt.xticks(rotation=45)
     ax.grid(True, alpha=0.3)
     st.pyplot(fig)
-    '''
-    fit
-    '''
-    # Define the start and end limits using datetime objects
-    start_hour = st.number_input(
-    "hour to start range for fitting",
-    min_value=0.0,
-    max_value=24.0,
-    step=0.1,
-    format="%.1f"
-    )
-    end_hour = st.number_input(
-    "hour to end range for fitting",
-    min_value=0.0,
-    max_value=24.0,
-    step=0.1,
-    format="%.1f"
-    )
-    if st.button("fit!"):
-        st.write(r'All models are wrong, but some are useful - George Box ')
-        start_time = start_hour*3600
-        end_time = end_hour*3600
-        t_fit_s=[]
-        CO2_fit=[]
-        for i in range(0,len(t_s)):
-            if(t_s[i] > start_time-1.0e-3 and t_s[i] < end_time + 1.0e-3):
-                t_fit_s.append(t_s[i])
-                CO2_fit.append(CO2s[i])
-        t_fit_s=np.array(t_fit_s)
-        CO2_fit=np.array(CO2_fit)
-        st.write('fitting to ',len(t_fit_s),' data points')
-        # ---------------------------------------------------------
-        # Fit of straight line
-        # ---------------------------------------------------------
-        result = linregress(t_fit_s, CO2_fit)
+    # Button toggles the mode
+    if st.button("Toggle between feeting and computing fraction 2nd hand air"):
+        st.session_state.mode = "infection risk" if st.session_state.mode == "fitting" else "fitting"
+    st.write("Current option:", st.session_state.mode)
+    if(st.session_state.mode == "fitting" ):
+        # Define the start and end limits using datetime objects
+        start_hour = st.number_input(
+        "hour to start range for fitting",
+        min_value=0.0,
+        max_value=24.0,
+        step=0.1,
+        format="%.1f"
+        )
+        end_hour = st.number_input(
+        "hour to end range for fitting",
+        min_value=0.0,
+        max_value=24.0,
+        step=0.1,
+        format="%.1f"
+        )
+        if st.button("fit!"):
+            st.write(r'All models are wrong, but some are useful - George Box ')
+            start_time = start_hour*3600
+            end_time = end_hour*3600
+            t_fit_s=[]
+            CO2_fit=[]
+            for i in range(0,len(t_s)):
+                if(t_s[i] > start_time-1.0e-3 and t_s[i] < end_time + 1.0e-3):
+                    t_fit_s.append(t_s[i])
+                    CO2_fit.append(CO2s[i])
+            t_fit_s=np.array(t_fit_s)
+            CO2_fit=np.array(CO2_fit)
+            st.write('fitting to ',len(t_fit_s),' data points')
+            # ---------------------------------------------------------
+            # Fit of straight line
+            # ---------------------------------------------------------
+            result = linregress(t_fit_s, CO2_fit)
 #        st.write(result)
-        inter=result.intercept
-        # convert slope to ppm/h from ppm/s
-        slope_h=result.slope*3600.0
-        # convert
-        err_est_slope=result.stderr*3600.0
-        st.write('fit of straight line to data over specified range')
-        st.write('slope ',round(slope_h,1),' ppm CO2 per hour +/-',round(err_est_slope,1),' ppm per hour')
-        # intercept
-        err_est_intercept=result.intercept_stderr
-        st.write('intercept ',round(inter),' ppm CO2 +/-',round(err_est_intercept),' ppm')
-        CO2_fit_line = inter+(slope_h/3600.0)*t_fit_s
+            inter=result.intercept
+            # convert slope to ppm/h from ppm/s
+            slope_h=result.slope*3600.0
+            # convert
+            err_est_slope=result.stderr*3600.0
+            st.write('fit of straight line to data over specified range')
+            st.write('slope ',round(slope_h,1),' ppm CO2 per hour +/-',round(err_est_slope,1),' ppm per hour')
+            # intercept
+            err_est_intercept=result.intercept_stderr
+            st.write('intercept ',round(inter),' ppm CO2 +/-',round(err_est_intercept),' ppm')
+            CO2_fit_line = inter+(slope_h/3600.0)*t_fit_s
 #
+            # Plot
+            fig, ax = plt.subplots(figsize=(5,2))
+            ax.scatter(t_s/3600.0, CO2s, color="black", s=30)
+            ax.set_xlabel('time /hour')
+            ax.set_ylabel('CO2 /ppm')
+#        ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))  # e.g., 01:00, 14:30
+            #ax.set_title(f"{CO2_col_label} vs {time_col_label}")
+            ax.xaxis.set_major_formatter(FuncFormatter(colon_fmt))
+            #plt.xticks(rotation=45)
+            # now plot fit
+            ax.plot(t_fit_s/3600.0, CO2_fit_line, 
+    #            label=f"Fit: y = {a:.3g} exp({b:.3g} t)", 
+            color="red", linewidth=2)
+            ax.grid(True, alpha=0.3)
+            st.pyplot(fig)
+    else:
         # Plot
-        fig, ax = plt.subplots(figsize=(5,3))
-
-        ax.scatter(t_s/3600.0, CO2s, color="black", s=30)
+        fig, ax = plt.subplots(figsize=(5,2))
+        ax.scatter(t_s/3600.0, (CO2s-410)/4.0e4, color="green", s=30)
         ax.set_xlabel('time /hour')
-        ax.set_ylabel('CO2 /ppm')
+        ax.set_ylabel('fraction 2nd hand')
 #        ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))  # e.g., 01:00, 14:30
         #ax.set_title(f"{CO2_col_label} vs {time_col_label}")
         ax.xaxis.set_major_formatter(FuncFormatter(colon_fmt))
-        plt.xticks(rotation=45)
-        # now plot fit
-        ax.plot(t_fit_s/3600.0, CO2_fit_line, 
-    #            label=f"Fit: y = {a:.3g} exp({b:.3g} t)", 
-            color="red", linewidth=2)
+        #plt.xticks(rotation=45)
         ax.grid(True, alpha=0.3)
         st.pyplot(fig)
-    
+        # now
+        start_hour_averaging = st.number_input(
+        "hour to start hour long period to average over",
+        min_value=0.0,
+        max_value=24.0,
+        value=10.0,
+        step=0.1,
+        format="%.1f"
+        )
+        CO2_av=[]
+        for i in range(0,len(t_s)):
+            if(t_s[i] > start_hour_averaging*3600-1.0e-3 
+               and t_s[i] < (start_hour_averaging+1.0)*3600 + 1.0e-3):
+                CO2_av.append(CO2s[i])
+        st.write('averaging over  ',len(CO2_av),' data points')
+        avCO2=np.mean(np.array(CO2_av))
+        st.write('mean CO2 ',round(avCO2),' ppm')
+        st.write('mean 2nd hand fraction ',round((avCO2-410.0)/4.0e4,3))
 
     st.write('Richard Sear, Jan 2026')
     st.markdown("[Streamlit (Python) code from GitHub](https://github.com/RichardSear/streamlit-appCO2plotting)")
