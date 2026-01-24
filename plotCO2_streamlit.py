@@ -65,7 +65,7 @@ if uploaded:
     ax.grid(True, alpha=0.3)
     st.pyplot(fig)
     # Button toggles the mode
-    if st.button("Toggle between feeting and computing fraction 2nd hand air"):
+    if st.button("Toggle between fitting and computing fraction 2nd hand air"):
         st.session_state.mode = "infection risk" if st.session_state.mode == "fitting" else "fitting"
     st.write("Current option:", st.session_state.mode)
     if(st.session_state.mode == "fitting" ):
@@ -96,7 +96,7 @@ if uploaded:
                     CO2_fit.append(CO2s[i])
             t_fit_s=np.array(t_fit_s)
             CO2_fit=np.array(CO2_fit)
-            st.write('fitting to ',len(t_fit_s),' data points')
+            st.write('fitting to ',len(t_fit_s),' data points NB should be at least 5')
             # ---------------------------------------------------------
             # Fit of straight line
             # ---------------------------------------------------------
@@ -111,8 +111,14 @@ if uploaded:
             st.write('slope ',round(slope_h,1),' ppm CO2 per hour +/-',round(err_est_slope,1),' ppm per hour')
             # intercept
             err_est_intercept=result.intercept_stderr
-            st.write('intercept ',round(inter),' ppm CO2 +/-',round(err_est_intercept),' ppm')
+            st.write('intercept ',round(inter),' ppm CO2 +/-',round(err_est_intercept),' ppm CO2')
+            # fit line for plotting and for residuals
             CO2_fit_line = inter+(slope_h/3600.0)*t_fit_s
+            # residuals
+            residuals=CO2_fit_line-CO2_fit
+            std_err_residuals=np.sqrt(np.sum(residuals**2)/(len(residuals)-2.0))
+            st.write('standard error of fit ',round(std_err_residuals),' ppm CO2 (smaller the better the fit)')
+            st.write('NB above figures after +/- are the uncertainties in the best value of slope/intercept')
 #
             # Plot
             fig, ax = plt.subplots(figsize=(5,2))
@@ -132,9 +138,9 @@ if uploaded:
     else:
         # Plot
         fig, ax = plt.subplots(figsize=(5,2))
-        ax.scatter(t_s/3600.0, (CO2s-410)/4.0e4, color="green", s=30)
+        ax.scatter(t_s/3600.0, (CO2s-410)/4.0e4 *100, color="green", s=30)
         ax.set_xlabel('time /hour')
-        ax.set_ylabel('fraction 2nd hand')
+        ax.set_ylabel('% 2nd hand')
 #        ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))  # e.g., 01:00, 14:30
         #ax.set_title(f"{CO2_col_label} vs {time_col_label}")
         ax.xaxis.set_major_formatter(FuncFormatter(colon_fmt))
@@ -158,8 +164,8 @@ if uploaded:
         st.write('averaging over  ',len(CO2_av),' data points')
         avCO2=np.mean(np.array(CO2_av))
         st.write('mean CO2 ',round(avCO2),' ppm')
-        st.write('mean 2nd hand fraction ',round((avCO2-410.0)/4.0e4,3))
+        st.write('mean 2nd hand fraction ',round(100*(avCO2-410.0)/4.0e4,1),' %')
 
     st.write('Richard Sear, Jan 2026')
     st.markdown("[Streamlit (Python) code from GitHub](https://github.com/RichardSear/streamlit-appCO2plotting)")
-   
+    st.markdown("[homepage for schools event this was written for](https://richardsear.me/schools-event-homepage-co2-flu-covid-you/)")
