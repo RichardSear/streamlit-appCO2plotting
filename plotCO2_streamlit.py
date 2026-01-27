@@ -9,52 +9,80 @@ from matplotlib.ticker import FuncFormatter
 def colon_fmt(x, pos):
     return f"{int(x)}:{int((x % 1) * 100):02d}"
 
+def readinlocalcsv(filename):
+    t_s_in = []
+    CO2s_in = []
+    with open(filename, newline="") as f:
+        reader = csv.DictReader(f)
+        column_headers=reader.fieldnames
+        print(column_headers)
+        time_col_label=column_headers[0]
+        #st.write('time column is',time_col_label)
+        for row in reader:
+            # Parse the datetime string
+            if(time_col_label == 'Time(DD/MM/YYYY H:mm)'):
+                dt = datetime.strptime(row[time_col_label], "%d/%m/%Y %H:%M")
+            elif(time_col_label == 'Time(H:mm:ss)'):
+                dt = datetime.strptime(row[time_col_label], "%H:%M:%S")
+            elif(time_col_label == 'Time(DD/MM/YYYY H:mm:ss)'):
+                dt = datetime.strptime(row[time_col_label], "%Y-%m-%d %H:%M:%S")
+            elif(time_col_label == 'Time2(DD/MM/YYYY H:mm:ss)'):
+                dt = datetime.strptime(row[time_col_label], "%d/%m/%Y %H:%M:%S")
+            elif(time_col_label == 'Time(YYYY-MM-DD H:mm:ss)'):
+                dt = datetime.strptime(row[time_col_label], "%Y-%m-%d %H:%M:%S") 
+            # Compute seconds since midnight
+            seconds = (
+            dt - dt.replace(hour=0, minute=0, second=0, microsecond=0)
+                    ).total_seconds()
+            #st.write(seconds)
+            t_s_in.append(seconds)
+            CO2s_in.append(row['Carbon dioxide(ppm)'])
+    #
+    t_s_in=np.array(t_s_in,dtype=float)
+    CO2s_in=np.array(CO2s_in,dtype=float)
+    return t_s_in,CO2s_in
 
 # Initialize state
 if "mode" not in st.session_state:
     st.session_state.mode = "fitting"   # default option
 
-
-t_s = []
-CO2s = []
-rows = []
-with open("Du2024schoolCO2.csv", newline="") as f:
-    reader = csv.DictReader(f)
-    column_headers=reader.fieldnames
-    print(column_headers)
-    time_col_label=column_headers[0]
-    st.write('time column is',time_col_label)
-    CO2_col_label='Carbon dioxide(ppm)'
-    for row in reader:
-        # Parse the datetime string
-        if(time_col_label == 'Time(DD/MM/YYYY H:mm)'):
-            dt = datetime.strptime(row[time_col_label], "%d/%m/%Y %H:%M")
-        elif(time_col_label == 'Time(H:mm:ss)'):
-            dt = datetime.strptime(row[time_col_label], "%H:%M:%S")
-        elif(time_col_label == 'Time(DD/MM/YYYY H:mm:ss)'):
-            dt = datetime.strptime(row[time_col_label], "%Y-%m-%d %H:%M:%S")
-        elif(time_col_label == 'Time2(DD/MM/YYYY H:mm:ss)'):
-            dt = datetime.strptime(row[time_col_label], "%d/%m/%Y %H:%M:%S")
-        elif(time_col_label == 'Time(YYYY-MM-DD H:mm:ss)'):
-            dt = datetime.strptime(row[time_col_label], "%Y-%m-%d %H:%M:%S")
-
-        
-        # Compute seconds since midnight
-        seconds = (
-          dt - dt.replace(hour=0, minute=0, second=0, microsecond=0)
-                   ).total_seconds()
-        #st.write(seconds)
-        t_s.append(seconds)
-        CO2s.append(row['Carbon dioxide(ppm)'])
+CO2_col_label='Carbon dioxide(ppm)'
 #
-t_s=np.array(t_s,dtype=float)
-CO2s=np.array(CO2s,dtype=float)
-#    for i in range(0,len(t_s)):
-#        print(t_s[i]/3600.0,CO2s[i])
-#    st.write(CO2s.dtype)
-'''
-plot day's data
-'''
+t_s1,CO2s1 = readinlocalcsv("Du2024schoolCO2.csv")
+t_s2,CO2s2 = readinlocalcsv("bedroom_nightCO2.csv")
+t_s3,CO2s3 = readinlocalcsv("home_during_day_eveningCO2.csv")
+t_s4,CO2s4 = readinlocalcsv("CO2_homethenMorristonhospital.csv")
+t_s5,CO2s5 = readinlocalcsv("livingroomCO2.csv")
+t_s6,CO2s6 = readinlocalcsv("officeCO2.csv")
+
+
+choice = st.radio(
+    "Choose an option",
+    ["school", "bedroom overnight", "home during workday & evening",
+     "hospital visit","living room working from home","my office"]
+)
+
+st.write("You picked:", choice)
+
+if(choice == 'school'):
+    t_s=t_s1
+    CO2s=CO2s1
+elif(choice == "bedroom overnight"):
+    t_s=t_s2
+    CO2s=CO2s2
+elif(choice == 'home during workday & evening'):
+    t_s=t_s3
+    CO2s=CO2s3
+elif(choice == "hospital visit"):
+    t_s=t_s4
+    CO2s=CO2s4
+elif(choice == "living room working from home"):
+    t_s=t_s5
+    CO2s=CO2s5
+elif(choice == "my office"):
+    t_s=t_s6
+    CO2s=CO2s6 
+#
 # Plot
 fig, ax = plt.subplots(figsize=(5,2))
 #    plt.xlim(pd.Timestamp(start_time),
@@ -102,7 +130,7 @@ if(st.session_state.mode == "fitting" ):
         st.write('fitting to ',len(t_fit_s),' data points NB should be at least 5')
         # ---------------------------------------------------------
         # Fit of straight line
-        # ---------------------------------------------------------
+         # ---------------------------------------------------------
         result = linregress(t_fit_s, CO2_fit)
 #        st.write(result)
         inter=result.intercept
