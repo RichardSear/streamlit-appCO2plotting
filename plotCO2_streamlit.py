@@ -50,7 +50,7 @@ CO2_col_label='Carbon dioxide(ppm)'
 #
 t_s1,CO2s1 = readinlocalcsv("Du2024schoolCO2.csv")
 t_s2,CO2s2 = readinlocalcsv("bedroom_nightCO2.csv")
-t_s3,CO2s3 = readinlocalcsv("home_during_day_eveningCO2.csv")
+t_s3,CO2s3 = readinlocalcsv("homeCO2_during_day_evening.csv")
 t_s4,CO2s4 = readinlocalcsv("CO2_homethenMorristonhospital.csv")
 t_s5,CO2s5 = readinlocalcsv("livingroomCO2.csv")
 t_s6,CO2s6 = readinlocalcsv("officeCO2.csv")
@@ -200,3 +200,4 @@ else:
     st.write('Richard Sear, Jan 2026')
     st.markdown("[Streamlit (Python) code from GitHub](https://github.com/RichardSear/streamlit-appCO2plotting)")
     st.markdown("[homepage for schools event this was written for](https://richardsear.me/schools-event-homepage-co2-flu-covid-you/)")
+
