@@ -95,6 +95,14 @@ ax.xaxis.set_major_formatter(FuncFormatter(colon_fmt))
 #plt.xticks(rotation=45)
 ax.grid(True, alpha=0.3)
 st.pyplot(fig)
+#
+st.write('When looking at data scientists typically by asking questions of the data, here good questions are:')
+st.markdown("""
+   * When is the CO2 level high? When is it low?
+   * When ppm CO2 is increasing in a plot, why is this? Hint: usually only source of CO2 is us humans, and CO2 is removed by ventilation
+   * If the ppm CO2 is too high, or increasing too fast, what can you do to stop this?
+""")
+st.write(r'Bear in mind that good air quality is often defined at around 1000 ppm CO2 (1.5 % second-hand air) or less')
 # Button toggles the mode
 if st.button("Toggle between fitting and computing fraction 2nd hand air"):
     st.session_state.mode = "infection risk" if st.session_state.mode == "fitting" else "fitting"
@@ -200,4 +208,3 @@ else:
     st.write('Richard Sear, Jan 2026')
     st.markdown("[Streamlit (Python) code from GitHub](https://github.com/RichardSear/streamlit-appCO2plotting)")
     st.markdown("[homepage for schools event this was written for](https://richardsear.me/schools-event-homepage-co2-flu-covid-you/)")
-
